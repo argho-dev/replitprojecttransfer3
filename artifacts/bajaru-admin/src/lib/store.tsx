@@ -3,9 +3,29 @@ import React, { createContext, useContext, useState, ReactNode } from "react";
 export type Product = {
   id: string;
   name: string;
+  description: string;
+  type: string;
+  category: string;
+  isVeg: boolean;
+  unitWeight: string;
+  basePrice: number;
   price: number;
   stock: number;
+  imageUrls: string[];
   imageUrl: string;
+  imageColorValue: number;
+  tags: string[];
+  rating: number;
+  ratingCount: number;
+  attributes: {
+    origin: string;
+    shelfLife: string;
+  };
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  localName: string;
+  searchTags: string[];
 };
 
 export type ProcurementItem = {
@@ -26,14 +46,86 @@ type AppContextType = {
 };
 
 const initialProducts: Product[] = [
-  { id: "1", name: "Fresh Tomatoes", price: 40, stock: 150, imageUrl: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&h=500&fit=crop" },
-  { id: "2", name: "Red Onions", price: 35, stock: 200, imageUrl: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&h=500&fit=crop" },
-  { id: "3", name: "Potatoes", price: 25, stock: 350, imageUrl: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&h=500&fit=crop" },
-  { id: "4", name: "Bananas (Robusta)", price: 60, stock: 80, imageUrl: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&h=500&fit=crop" },
-  { id: "5", name: "Fuji Apples", price: 120, stock: 45, imageUrl: "https://images.unsplash.com/photo-1560806887-1e4cd0b6fa6c?w=500&h=500&fit=crop" },
-  { id: "6", name: "Orange Carrots", price: 50, stock: 90, imageUrl: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&h=500&fit=crop" },
-  { id: "7", name: "Green Spinach", price: 20, stock: 30, imageUrl: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&h=500&fit=crop" },
-  { id: "8", name: "Whole Milk 1L", price: 65, stock: 120, imageUrl: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&h=500&fit=crop" },
+  {
+    id: "1", name: "Fresh Tomatoes", localName: "", description: "Farm fresh red tomatoes, rich in vitamins.", type: "vegetable", category: "vegetable",
+    isVeg: true, unitWeight: "500 gm", basePrice: 40, price: 40, stock: 150,
+    imageUrls: ["https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500&h=500&fit=crop",
+    imageColorValue: 4294198331, tags: ["fresh", "vitamin-c", "salad"], rating: 4.5, ratingCount: 210,
+    attributes: { origin: "Maharashtra", shelfLife: "1 week" }, active: true,
+    createdAt: "2026-02-10T05:00:00.000+00:00", updatedAt: "2026-02-10T05:00:00.000+00:00",
+    searchTags: ["tomato", "tamatar"],
+  },
+  {
+    id: "2", name: "Red Onions", localName: "", description: "Pungent red onions great for cooking.", type: "vegetable", category: "vegetable",
+    isVeg: true, unitWeight: "1 kg", basePrice: 35, price: 35, stock: 200,
+    imageUrls: ["https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1618512496248-a07fe83aa8cb?w=500&h=500&fit=crop",
+    imageColorValue: 4288717988, tags: ["cooking", "essential"], rating: 4.2, ratingCount: 330,
+    attributes: { origin: "Nashik", shelfLife: "3 weeks" }, active: true,
+    createdAt: "2026-02-11T05:00:00.000+00:00", updatedAt: "2026-02-11T05:00:00.000+00:00",
+    searchTags: ["onion", "pyaaz"],
+  },
+  {
+    id: "3", name: "Potatoes", localName: "", description: "Versatile potatoes perfect for all Indian dishes.", type: "vegetable", category: "vegetable",
+    isVeg: true, unitWeight: "1 kg", basePrice: 25, price: 25, stock: 350,
+    imageUrls: ["https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500&h=500&fit=crop",
+    imageColorValue: 4291148622, tags: ["staple", "cooking"], rating: 4.3, ratingCount: 420,
+    attributes: { origin: "UP", shelfLife: "2 weeks" }, active: true,
+    createdAt: "2026-02-12T05:00:00.000+00:00", updatedAt: "2026-02-12T05:00:00.000+00:00",
+    searchTags: ["potato", "aloo"],
+  },
+  {
+    id: "4", name: "Bananas (Robusta)", localName: "", description: "Sweet and filling Robusta bananas.", type: "fruit", category: "fruit",
+    isVeg: true, unitWeight: "1 dozen", basePrice: 60, price: 60, stock: 80,
+    imageUrls: ["https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=500&h=500&fit=crop",
+    imageColorValue: 4294961920, tags: ["energy", "sweet"], rating: 4.4, ratingCount: 175,
+    attributes: { origin: "Kerala", shelfLife: "5 days" }, active: true,
+    createdAt: "2026-02-13T05:00:00.000+00:00", updatedAt: "2026-02-13T05:00:00.000+00:00",
+    searchTags: ["banana", "kela"],
+  },
+  {
+    id: "5", name: "Fuji Apples", localName: "", description: "Crisp and sweet Fuji apples imported fresh.", type: "fruit", category: "fruit",
+    isVeg: true, unitWeight: "500 gm", basePrice: 120, price: 120, stock: 45,
+    imageUrls: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6fa6c?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1560806887-1e4cd0b6fa6c?w=500&h=500&fit=crop",
+    imageColorValue: 4294198331, tags: ["sweet", "crispy", "imported"], rating: 4.7, ratingCount: 98,
+    attributes: { origin: "Himachal", shelfLife: "2 weeks" }, active: true,
+    createdAt: "2026-02-14T05:00:00.000+00:00", updatedAt: "2026-02-14T05:00:00.000+00:00",
+    searchTags: ["apple", "seb"],
+  },
+  {
+    id: "6", name: "Orange Carrots", localName: "", description: "Crunchy carrots rich in beta-carotene.", type: "vegetable", category: "vegetable",
+    isVeg: true, unitWeight: "500 gm", basePrice: 50, price: 50, stock: 90,
+    imageUrls: ["https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&h=500&fit=crop",
+    imageColorValue: 4294940416, tags: ["healthy", "crunchy"], rating: 4.1, ratingCount: 145,
+    attributes: { origin: "Punjab", shelfLife: "10 days" }, active: true,
+    createdAt: "2026-02-14T05:00:00.000+00:00", updatedAt: "2026-02-14T05:00:00.000+00:00",
+    searchTags: ["carrot", "gajar"],
+  },
+  {
+    id: "7", name: "Green Spinach", localName: "", description: "Fresh spinach leaves, rich in iron.", type: "vegetable", category: "leafy",
+    isVeg: true, unitWeight: "250 gm", basePrice: 20, price: 20, stock: 30,
+    imageUrls: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&h=500&fit=crop",
+    imageColorValue: 4279900192, tags: ["iron", "healthy", "leafy"], rating: 4.0, ratingCount: 88,
+    attributes: { origin: "Rajasthan", shelfLife: "3 days" }, active: true,
+    createdAt: "2026-02-15T05:00:00.000+00:00", updatedAt: "2026-02-15T05:00:00.000+00:00",
+    searchTags: ["spinach", "palak"],
+  },
+  {
+    id: "8", name: "Whole Milk 1L", localName: "", description: "Full-fat pasteurized whole milk.", type: "dairy", category: "dairy",
+    isVeg: true, unitWeight: "1 L", basePrice: 65, price: 65, stock: 120,
+    imageUrls: ["https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&h=500&fit=crop"],
+    imageUrl: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500&h=500&fit=crop",
+    imageColorValue: 4294967295, tags: ["dairy", "calcium", "fresh"], rating: 4.6, ratingCount: 260,
+    attributes: { origin: "Gujarat", shelfLife: "2 days" }, active: true,
+    createdAt: "2026-02-16T05:00:00.000+00:00", updatedAt: "2026-02-16T05:00:00.000+00:00",
+    searchTags: ["milk", "doodh"],
+  },
 ];
 
 const initialProcurement: ProcurementItem[] = [
