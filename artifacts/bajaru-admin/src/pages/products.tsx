@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAppStore, Product } from "@/lib/store";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Edit2, Search, Plus, Package, Star } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Edit2, Search, Plus, Package, Star, UploadCloud, X, Link2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -31,11 +31,94 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
+function ImageUploadZone({ onFilesAdded }: { onFilesAdded: (urls: string[]) => void }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const processFiles = useCallback((files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const results: string[] = [];
+    let done = 0;
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) results.push(e.target.result as string);
+        done++;
+        if (done === files.length) onFilesAdded(results.filter(Boolean));
+      };
+      reader.readAsDataURL(file);
+    });
+  }, [onFilesAdded]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    processFiles(e.dataTransfer.files);
+  }, [processFiles]);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+
+  return (
+    <div
+      onClick={() => inputRef.current?.click()}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      className={`flex flex-col items-center justify-center gap-1.5 rounded-xl border-2 border-dashed cursor-pointer transition-colors h-full min-h-[90px] px-3 py-3
+        ${isDragging
+          ? "border-primary bg-primary/10"
+          : "border-border/50 bg-secondary/30 hover:border-primary/50 hover:bg-secondary/60"
+        }`}
+    >
+      <UploadCloud className={`w-6 h-6 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
+      <p className="text-xs text-center text-muted-foreground leading-tight">
+        <span className="font-semibold text-foreground">Click or drag</span><br />to upload images
+      </p>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => processFiles(e.target.files)}
+      />
+    </div>
+  );
+}
+
+const blankProduct = (): Product => ({
+  id: "",
+  name: "",
+  description: "",
+  type: "",
+  category: "",
+  isVeg: true,
+  unitWeight: "",
+  basePrice: 0,
+  price: 0,
+  stock: 0,
+  imageUrls: [],
+  imageUrl: "",
+  imageColorValue: 0,
+  tags: [],
+  rating: 0,
+  ratingCount: 0,
+  attributes: { origin: "", shelfLife: "" },
+  active: true,
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
+  localName: "",
+  searchTags: [],
+});
+
 export default function Products() {
   const { products, setProducts } = useAppStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [originalId, setOriginalId] = useState<string>("");
+  const [isNewProduct, setIsNewProduct] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredProducts = products.filter(p =>
@@ -45,20 +128,32 @@ export default function Products() {
   const handleEditClick = (product: Product) => {
     setEditingProduct({ ...product });
     setOriginalId(product.id);
+    setIsNewProduct(false);
+    setIsDialogOpen(true);
+  };
+
+  const handleNewProduct = () => {
+    const blank = blankProduct();
+    setEditingProduct(blank);
+    setOriginalId("");
+    setIsNewProduct(true);
     setIsDialogOpen(true);
   };
 
   const handleSave = () => {
-    if (editingProduct) {
-      const updated = {
-        ...editingProduct,
-        imageUrl: editingProduct.imageUrls[0] ?? editingProduct.imageUrl,
-        updatedAt: new Date().toISOString(),
-      };
+    if (!editingProduct) return;
+    const updated = {
+      ...editingProduct,
+      imageUrl: editingProduct.imageUrls[0] ?? editingProduct.imageUrl,
+      updatedAt: new Date().toISOString(),
+    };
+    if (isNewProduct) {
+      setProducts([...products, updated]);
+    } else {
       setProducts(products.map(p => p.id === originalId ? updated : p));
-      setIsDialogOpen(false);
-      setEditingProduct(null);
     }
+    setIsDialogOpen(false);
+    setEditingProduct(null);
   };
 
   const updateField = <K extends keyof Product>(key: K, value: Product[K]) => {
@@ -69,6 +164,16 @@ export default function Products() {
   const updateAttribute = (key: "origin" | "shelfLife", value: string) => {
     if (!editingProduct) return;
     setEditingProduct({ ...editingProduct, attributes: { ...editingProduct.attributes, [key]: value } });
+  };
+
+  const handleUploadedImages = (urls: string[]) => {
+    if (!editingProduct) return;
+    updateField("imageUrls", [...editingProduct.imageUrls, ...urls]);
+  };
+
+  const removeImage = (index: number) => {
+    if (!editingProduct) return;
+    updateField("imageUrls", editingProduct.imageUrls.filter((_, i) => i !== index));
   };
 
   return (
@@ -89,7 +194,10 @@ export default function Products() {
               className="pl-9 rounded-xl border-border/50 bg-card"
             />
           </div>
-          <Button className="rounded-xl shadow-lg shadow-primary/20 hover-elevate">
+          <Button
+            className="rounded-xl shadow-lg shadow-primary/20 hover-elevate"
+            onClick={handleNewProduct}
+          >
             <Plus className="w-4 h-4 mr-2" />
             New Product
           </Button>
@@ -106,11 +214,17 @@ export default function Products() {
           >
             <Card className="overflow-hidden border-border/50 rounded-2xl hover:border-primary/30 transition-all duration-300 hover:shadow-xl group">
               <div className="h-48 overflow-hidden relative bg-muted">
-                <img
-                  src={product.imageUrls[0] ?? product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
+                {(product.imageUrls[0] ?? product.imageUrl) ? (
+                  <img
+                    src={product.imageUrls[0] ?? product.imageUrl}
+                    alt={product.name}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Package className="w-12 h-12 text-muted-foreground/30" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm px-2.5 py-1 rounded-full text-xs font-bold text-foreground shadow-sm">
                   {product.stock} in stock
@@ -124,7 +238,7 @@ export default function Products() {
               <CardContent className="p-5">
                 <div className="mb-3">
                   <div className="flex items-center gap-1.5 mb-0.5">
-                    <h3 className="font-bold text-lg text-foreground line-clamp-1">{product.name}</h3>
+                    <h3 className="font-bold text-lg text-foreground line-clamp-1">{product.name || "Untitled"}</h3>
                     {product.isVeg && (
                       <span className="w-4 h-4 rounded-sm border-2 border-green-600 flex items-center justify-center flex-shrink-0">
                         <span className="w-2 h-2 rounded-full bg-green-600" />
@@ -172,7 +286,9 @@ export default function Products() {
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
             <div className="absolute bottom-3 left-6">
-              <DialogTitle className="text-xl font-display">Edit {editingProduct?.name}</DialogTitle>
+              <DialogTitle className="text-xl font-display">
+                {isNewProduct ? "New Product" : `Edit ${editingProduct?.name}`}
+              </DialogTitle>
             </div>
           </div>
 
@@ -292,24 +408,44 @@ export default function Products() {
                 </div>
 
                 <SectionTitle>Media</SectionTitle>
-                <Field label="Image URLs (one per line)">
-                  <Textarea
-                    value={editingProduct.imageUrls.join("\n")}
-                    onChange={(e) =>
-                      updateField("imageUrls", e.target.value.split("\n").map(s => s.trim()).filter(Boolean))
-                    }
-                    className="rounded-xl bg-secondary/50 focus-visible:bg-background resize-none font-mono text-xs"
-                    rows={3}
-                    placeholder="https://..."
-                  />
-                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Image URLs (one per line)">
+                    <div className="relative">
+                      <Link2 className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-muted-foreground" />
+                      <Textarea
+                        value={editingProduct.imageUrls.filter(u => !u.startsWith("data:")).join("\n")}
+                        onChange={(e) => {
+                          const urlLines = e.target.value.split("\n").map(s => s.trim()).filter(Boolean);
+                          const base64Existing = editingProduct.imageUrls.filter(u => u.startsWith("data:"));
+                          updateField("imageUrls", [...urlLines, ...base64Existing]);
+                        }}
+                        className="rounded-xl bg-secondary/50 focus-visible:bg-background resize-none font-mono text-xs pl-8"
+                        rows={4}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </Field>
+                  <Field label="Upload from Device">
+                    <ImageUploadZone onFilesAdded={handleUploadedImages} />
+                  </Field>
+                </div>
+
                 {editingProduct.imageUrls.length > 0 && (
                   <div className="flex gap-2 flex-wrap">
                     {editingProduct.imageUrls.map((url, i) => (
-                      <img key={i} src={url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
+                      <div key={i} className="relative group/img">
+                        <img src={url} alt="" className="w-16 h-16 rounded-xl object-cover border border-border" />
+                        <button
+                          onClick={() => removeImage(i)}
+                          className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity shadow"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
+
                 <Field label="Image Color Value">
                   <Input
                     type="number"
@@ -409,7 +545,7 @@ export default function Products() {
                 Cancel
               </Button>
               <Button onClick={handleSave} className="rounded-xl shadow-lg shadow-primary/20">
-                Save Changes
+                {isNewProduct ? "Add Product" : "Save Changes"}
               </Button>
             </DialogFooter>
           </div>
