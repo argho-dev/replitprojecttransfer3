@@ -6,3 +6,9 @@ id = "iiP35LTv7GCzH1lP-3N04"
 uri = "file://bajaru-admin-source.tar.gz"
 type = "unspecified"
 title = "Bajaru Admin Panel - Source Code"
+
+[[outputs]]
+id = "L_MQwaAbXqxB8zgQ5lV-N"
+uri = "file://bajaru-admin-local.tar.gz"
+type = "unspecified"
+title = "bajaru-admin — Full Standalone Project (VS Code Ready)"
