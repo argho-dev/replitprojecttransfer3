@@ -22,17 +22,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function ReadonlyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1.5">
-      <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{label}</Label>
-      <div className="rounded-xl h-9 px-3 flex items-center bg-muted/40 text-xs text-muted-foreground font-mono border border-border/30 truncate">
-        {value}
-      </div>
-    </div>
-  );
-}
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2 mt-2">
@@ -46,6 +35,7 @@ export default function Products() {
   const { products, setProducts } = useAppStore();
   const [searchTerm, setSearchTerm] = useState("");
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [originalId, setOriginalId] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const filteredProducts = products.filter(p =>
@@ -54,6 +44,7 @@ export default function Products() {
 
   const handleEditClick = (product: Product) => {
     setEditingProduct({ ...product });
+    setOriginalId(product.id);
     setIsDialogOpen(true);
   };
 
@@ -64,7 +55,7 @@ export default function Products() {
         imageUrl: editingProduct.imageUrls[0] ?? editingProduct.imageUrl,
         updatedAt: new Date().toISOString(),
       };
-      setProducts(products.map(p => p.id === editingProduct.id ? updated : p));
+      setProducts(products.map(p => p.id === originalId ? updated : p));
       setIsDialogOpen(false);
       setEditingProduct(null);
     }
@@ -189,14 +180,15 @@ export default function Products() {
             <ScrollArea className="max-h-[65vh]">
               <div className="px-6 pb-2 space-y-4">
 
-                <SectionTitle>Read-only Info</SectionTitle>
-                <div className="grid grid-cols-1 gap-3">
-                  <ReadonlyField label="Product ID (_id)" value={editingProduct.id} />
-                  <div className="grid grid-cols-2 gap-3">
-                    <ReadonlyField label="Created At" value={new Date(editingProduct.createdAt).toLocaleString()} />
-                    <ReadonlyField label="Updated At" value={new Date(editingProduct.updatedAt).toLocaleString()} />
-                  </div>
-                </div>
+                <SectionTitle>Product ID</SectionTitle>
+                <Field label="Product ID (_id)">
+                  <Input
+                    value={editingProduct.id}
+                    onChange={(e) => updateField("id", e.target.value)}
+                    className="rounded-xl h-9 bg-secondary/50 focus-visible:bg-background font-mono"
+                    placeholder="e.g. veg_apple_green"
+                  />
+                </Field>
 
                 <SectionTitle>Basic Info</SectionTitle>
                 <div className="grid grid-cols-2 gap-3">
