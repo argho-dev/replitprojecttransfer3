@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ShoppingBasket, Truck, Leaf, LogOut } from "lucide-react";
+import { LayoutDashboard, ShoppingBasket, Truck, LogOut } from "lucide-react";
 
 export function Sidebar() {
   const [location] = useLocation();
@@ -13,9 +13,7 @@ export function Sidebar() {
   return (
     <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col h-screen fixed left-0 top-0 shadow-xl z-20">
       <div className="p-6 flex items-center gap-3 border-b border-sidebar-border/50">
-        <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-lg shadow-primary/20">
-          <Leaf className="w-6 h-6" />
-        </div>
+        <img src="/app-icon.png" alt="Bajaru logo" className="w-10 h-10 rounded-xl object-cover shadow-lg" />
         <h1 className="text-xl font-bold font-display tracking-wide text-white">Bajaru<span className="text-primary-foreground/70 font-normal">Admin</span></h1>
       </div>
       
