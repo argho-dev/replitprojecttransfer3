@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
+export type UserProfile = {
+  name: string;
+  role: string;
+  avatarUrl: string;
+};
+
 export type Product = {
   id: string;
   name: string;
@@ -43,6 +49,8 @@ type AppContextType = {
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   procurementItems: ProcurementItem[];
   setProcurementItems: React.Dispatch<React.SetStateAction<ProcurementItem[]>>;
+  userProfile: UserProfile;
+  setUserProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
 };
 
 const initialProducts: Product[] = [
@@ -138,9 +146,14 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [procurementItems, setProcurementItems] = useState<ProcurementItem[]>(initialProcurement);
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    name: "Admin User",
+    role: "Store Manager",
+    avatarUrl: "",
+  });
 
   return (
-    <AppContext.Provider value={{ products, setProducts, procurementItems, setProcurementItems }}>
+    <AppContext.Provider value={{ products, setProducts, procurementItems, setProcurementItems, userProfile, setUserProfile }}>
       {children}
     </AppContext.Provider>
   );
