@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useAppStore, ProcurementItem } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Truck, CheckCircle2, Clock, Plus } from "lucide-react";
+import { Truck, CheckCircle2, Plus, UploadCloud, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Procurement() {
@@ -17,6 +17,33 @@ export default function Procurement() {
     unit: "kg",
     imageUrl: ""
   });
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageFile = useCallback((file: File) => {
+    if (!file.type.startsWith("image/")) return;
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview(objectUrl);
+    setFormData(prev => ({ ...prev, imageUrl: objectUrl }));
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleImageFile(file);
+  }, [handleImageFile]);
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
+  const handleDragLeave = () => setIsDragging(false);
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setFormData(prev => ({ ...prev, imageUrl: "" }));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,6 +61,8 @@ export default function Procurement() {
 
     setProcurementItems([newItem, ...procurementItems]);
     setFormData({ name: "", quantity: "", unit: "kg", imageUrl: "" });
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const markReceived = (id: string) => {
@@ -104,14 +133,48 @@ export default function Procurement() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="image" className="font-semibold">Image URL (Optional)</Label>
-                  <Input 
-                    id="image" 
-                    placeholder="https://..." 
-                    value={formData.imageUrl}
-                    onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                    className="rounded-xl h-11"
+                  <Label className="font-semibold">Image (Optional)</Label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageFile(f); }}
                   />
+                  {imagePreview ? (
+                    <div className="relative rounded-xl overflow-hidden border border-border/50 bg-muted aspect-video">
+                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div
+                      onDrop={handleDrop}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed cursor-pointer transition-colors py-6 px-4 ${
+                        isDragging
+                          ? "border-primary bg-primary/5"
+                          : "border-border/60 hover:border-primary/50 hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className={`p-2 rounded-full transition-colors ${isDragging ? "bg-primary/10" : "bg-muted"}`}>
+                        <UploadCloud className={`w-5 h-5 ${isDragging ? "text-primary" : "text-muted-foreground"}`} />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-foreground">
+                          {isDragging ? "Drop to upload" : "Drag & drop or click"}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">PNG, JPG, WEBP up to 10MB</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Button type="submit" className="w-full rounded-xl h-12 mt-2 shadow-lg shadow-primary/20 text-md font-semibold hover-elevate">
