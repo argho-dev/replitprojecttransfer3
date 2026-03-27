@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "iiP35LTv7GCzH1lP-3N04"
+uri = "file://bajaru-admin-source.tar.gz"
+type = "unspecified"
+title = "Bajaru Admin Panel - Source Code"
