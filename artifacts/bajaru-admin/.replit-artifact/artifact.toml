@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Bajaru Admin Panel"
+version = "1.0.0"
+id = "artifacts/bajaru-admin"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22464
+
+[services.development]
+run = "pnpm --filter @workspace/bajaru-admin run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/bajaru-admin", "run", "build" ]
+publicDir = "artifacts/bajaru-admin/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22464"
+BASE_PATH = "/"

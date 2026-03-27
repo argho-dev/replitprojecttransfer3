@@ -1,0 +1,12 @@
+packages:
+  "framer-motion": "Smooth page transitions and staggered list animations"
+  "recharts": "Analytics charts for the dashboard"
+  "react-hook-form": "Form state management"
+  "@hookform/resolvers": "Zod validation resolver for forms"
+  "zod": "Schema validation for products and procurement"
+
+images: []
+
+notes:
+  - No backend required, using React Context + useState for data persistence across route changes
+  - Using framer-motion for premium feel interactions
